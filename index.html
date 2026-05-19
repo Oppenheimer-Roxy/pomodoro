@@ -1,0 +1,583 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>番茄钟</title>
+<style>
+  :root {
+    --bg: #0f172a;
+    --surface: #1e293b;
+    --text: #f1f5f9;
+    --text-secondary: #94a3b8;
+    --primary: #ef4444;
+    --primary-glow: rgba(239, 68, 68, 0.3);
+    --break: #22c55e;
+    --break-glow: rgba(34, 197, 94, 0.3);
+    --ring-bg: #334155;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    user-select: none;
+    -webkit-user-select: none;
+  }
+
+  .container {
+    text-align: center;
+    padding: 2rem;
+  }
+
+  .header {
+    margin-bottom: 2rem;
+  }
+
+  .mode-tabs {
+    display: flex;
+    gap: 0.5rem;
+    justify-content: center;
+    margin-bottom: 2rem;
+  }
+
+  .mode-tab {
+    padding: 0.5rem 1.25rem;
+    border-radius: 2rem;
+    border: 1px solid var(--ring-bg);
+    background: transparent;
+    color: var(--text-secondary);
+    cursor: pointer;
+    font-size: 0.875rem;
+    transition: all 0.2s;
+  }
+
+  .mode-tab:hover {
+    border-color: var(--text-secondary);
+    color: var(--text);
+  }
+
+  .mode-tab.active {
+    background: var(--primary);
+    border-color: var(--primary);
+    color: #fff;
+  }
+
+  .mode-tab.break-active {
+    background: var(--break);
+    border-color: var(--break);
+  }
+
+  .timer-wrapper {
+    position: relative;
+    width: 320px;
+    height: 320px;
+    margin: 0 auto 2rem;
+  }
+
+  .ring-container {
+    position: relative;
+    width: 100%;
+    height: 100%;
+  }
+
+  .ring-bg {
+    fill: none;
+    stroke: var(--ring-bg);
+    stroke-width: 8;
+  }
+
+  .ring-progress {
+    fill: none;
+    stroke: var(--primary);
+    stroke-width: 8;
+    stroke-linecap: round;
+    transform: rotate(-90deg);
+    transform-origin: center;
+    transition: stroke-dashoffset 0.3s linear, stroke 0.3s;
+  }
+
+  .ring-progress.break {
+    stroke: var(--break);
+  }
+
+  .timer-display {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .time {
+    font-size: 4.5rem;
+    font-weight: 300;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: 2px;
+  }
+
+  .label {
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    margin-top: 0.25rem;
+  }
+
+  .controls {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+    margin-bottom: 2rem;
+  }
+
+  .btn {
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+    background: var(--surface);
+    color: var(--text);
+  }
+
+  .btn:hover {
+    transform: scale(1.05);
+  }
+
+  .btn:active {
+    transform: scale(0.95);
+  }
+
+  .btn-primary {
+    width: 64px;
+    height: 64px;
+    background: var(--primary);
+    color: #fff;
+    box-shadow: 0 0 24px var(--primary-glow);
+  }
+
+  .btn-primary.break-btn {
+    background: var(--break);
+    box-shadow: 0 0 24px var(--break-glow);
+  }
+
+  .btn svg {
+    width: 24px;
+    height: 24px;
+  }
+
+  .stats {
+    display: flex;
+    gap: 2rem;
+    justify-content: center;
+  }
+
+  .stat {
+    text-align: center;
+  }
+
+  .stat-value {
+    font-size: 1.5rem;
+    font-weight: 600;
+  }
+
+  .stat-label {
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+
+  .settings {
+    margin-top: 2rem;
+    display: flex;
+    gap: 1.5rem;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+
+  .setting {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    align-items: center;
+  }
+
+  .setting label {
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+
+  .setting input {
+    width: 64px;
+    padding: 0.375rem 0;
+    text-align: center;
+    border-radius: 0.5rem;
+    border: 1px solid var(--ring-bg);
+    background: var(--surface);
+    color: var(--text);
+    font-size: 0.875rem;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .setting input:focus {
+    outline: none;
+    border-color: var(--primary);
+  }
+
+  .footer {
+    margin-top: 2rem;
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.6; }
+  }
+
+  .paused .time {
+    animation: pulse 2s ease-in-out infinite;
+  }
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="mode-tabs">
+    <button class="mode-tab active" data-mode="work">专注</button>
+    <button class="mode-tab" data-mode="shortBreak">短休息</button>
+    <button class="mode-tab" data-mode="longBreak">长休息</button>
+  </div>
+
+  <div class="timer-wrapper" id="timerWrapper">
+    <svg class="ring-container" viewBox="0 0 320 320">
+      <circle class="ring-bg" cx="160" cy="160" r="144"/>
+      <circle class="ring-progress" id="ringProgress" cx="160" cy="160" r="144"
+              stroke-dasharray="904.778" stroke-dashoffset="0"/>
+    </svg>
+    <div class="timer-display">
+      <div class="time" id="timeDisplay">25:00</div>
+      <div class="label" id="labelDisplay">专注</div>
+    </div>
+  </div>
+
+  <div class="controls">
+    <button class="btn" id="btnReset" title="重置 (R)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <polyline points="1 4 1 10 7 10"/>
+        <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/>
+      </svg>
+    </button>
+    <button class="btn btn-primary" id="btnToggle" title="开始/暂停 (空格)">
+      <svg viewBox="0 0 24 24" fill="currentColor" id="iconPlay">
+        <polygon points="6 3 20 12 6 21 6 3"/>
+      </svg>
+      <svg viewBox="0 0 24 24" fill="currentColor" id="iconPause" style="display:none">
+        <rect x="5" y="3" width="5" height="18"/>
+        <rect x="14" y="3" width="5" height="18"/>
+      </svg>
+    </button>
+    <button class="btn" id="btnSkip" title="跳过 (→)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <polygon points="5 4 15 12 5 20 5 4"/>
+        <line x1="19" y1="5" x2="19" y2="19"/>
+      </svg>
+    </button>
+  </div>
+
+  <div class="stats">
+    <div class="stat">
+      <div class="stat-value" id="statSessions">0</div>
+      <div class="stat-label">完成专注</div>
+    </div>
+    <div class="stat">
+      <div class="stat-value" id="statTotalTime">0m</div>
+      <div class="stat-label">总专注时长</div>
+    </div>
+  </div>
+
+  <div class="settings">
+    <div class="setting">
+      <label>专注 (分钟)</label>
+      <input type="number" id="workDuration" value="25" min="1" max="120">
+    </div>
+    <div class="setting">
+      <label>短休息 (分钟)</label>
+      <input type="number" id="shortBreakDuration" value="5" min="1" max="60">
+    </div>
+    <div class="setting">
+      <label>长休息 (分钟)</label>
+      <input type="number" id="longBreakDuration" value="15" min="1" max="60">
+    </div>
+    <div class="setting">
+      <label>长休息间隔</label>
+      <input type="number" id="longBreakInterval" value="4" min="1" max="10">
+    </div>
+  </div>
+
+  <div class="footer">
+    空格键 开始/暂停 &nbsp; R键 重置 &nbsp; →键 跳过
+  </div>
+</div>
+
+<script>
+  const CIRCUMFERENCE = 2 * Math.PI * 144;
+
+  const ring = document.getElementById('ringProgress');
+  const timeDisplay = document.getElementById('timeDisplay');
+  const labelDisplay = document.getElementById('labelDisplay');
+  const btnToggle = document.getElementById('btnToggle');
+  const iconPlay = document.getElementById('iconPlay');
+  const iconPause = document.getElementById('iconPause');
+  const timerWrapper = document.getElementById('timerWrapper');
+  const statSessions = document.getElementById('statSessions');
+  const statTotalTime = document.getElementById('statTotalTime');
+
+  const workDurationInput = document.getElementById('workDuration');
+  const shortBreakDurationInput = document.getElementById('shortBreakDuration');
+  const longBreakDurationInput = document.getElementById('longBreakDuration');
+  const longBreakIntervalInput = document.getElementById('longBreakInterval');
+
+  ring.style.strokeDasharray = CIRCUMFERENCE;
+  ring.style.strokeDashoffset = '0';
+
+  let mode = 'work';
+  let timeLeft = 25 * 60;
+  let totalSeconds = 25 * 60;
+  let intervalId = null;
+  let completedSessions = 0;
+  let totalWorkMinutes = 0;
+
+  function formatTime(seconds) {
+    const m = Math.floor(seconds / 60);
+    const s = seconds % 60;
+    return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+  }
+
+  function updateDisplay() {
+    timeDisplay.textContent = formatTime(timeLeft);
+    const progress = timeLeft / totalSeconds;
+    ring.style.strokeDashoffset = CIRCUMFERENCE * (1 - progress);
+    document.title = `${formatTime(timeLeft)} - 番茄钟`;
+  }
+
+  function setMode(newMode) {
+    mode = newMode;
+    clearInterval(intervalId);
+    intervalId = null;
+
+    const isBreak = mode === 'shortBreak' || mode === 'longBreak';
+
+    if (mode === 'work') {
+      totalSeconds = parseInt(workDurationInput.value) * 60;
+    } else if (mode === 'shortBreak') {
+      totalSeconds = parseInt(shortBreakDurationInput.value) * 60;
+    } else {
+      totalSeconds = parseInt(longBreakDurationInput.value) * 60;
+    }
+
+    timeLeft = totalSeconds;
+
+    ring.classList.toggle('break', isBreak);
+    btnToggle.classList.toggle('break-btn', isBreak);
+    timerWrapper.classList.remove('paused');
+
+    iconPlay.style.display = 'block';
+    iconPause.style.display = 'none';
+
+    document.querySelectorAll('.mode-tab').forEach(t => t.classList.remove('active', 'break-active'));
+    const activeTab = document.querySelector(`[data-mode="${mode}"]`);
+    if (isBreak) {
+      activeTab.classList.add('active', 'break-active');
+    } else {
+      activeTab.classList.add('active');
+    }
+
+    updateLabel();
+    updateDisplay();
+  }
+
+  function updateLabel() {
+    const labels = { work: '专注', shortBreak: '短休息', longBreak: '长休息' };
+    labelDisplay.textContent = labels[mode];
+  }
+
+  function toggleTimer() {
+    if (intervalId) {
+      pause();
+    } else {
+      start();
+    }
+  }
+
+  function start() {
+    intervalId = setInterval(tick, 1000);
+    iconPlay.style.display = 'none';
+    iconPause.style.display = 'block';
+    timerWrapper.classList.remove('paused');
+  }
+
+  function pause() {
+    clearInterval(intervalId);
+    intervalId = null;
+    iconPlay.style.display = 'block';
+    iconPause.style.display = 'none';
+    timerWrapper.classList.add('paused');
+  }
+
+  function reset() {
+    clearInterval(intervalId);
+    intervalId = null;
+    timeLeft = totalSeconds;
+    iconPlay.style.display = 'block';
+    iconPause.style.display = 'none';
+    timerWrapper.classList.remove('paused');
+    updateDisplay();
+  }
+
+  function tick() {
+    timeLeft--;
+    updateDisplay();
+
+    if (timeLeft <= 0) {
+      clearInterval(intervalId);
+      intervalId = null;
+      notify();
+
+      if (mode === 'work') {
+        completedSessions++;
+        totalWorkMinutes += parseInt(workDurationInput.value);
+        statSessions.textContent = completedSessions;
+        statTotalTime.textContent = totalWorkMinutes + 'm';
+
+        const interval = parseInt(longBreakIntervalInput.value);
+        if (completedSessions % interval === 0) {
+          setMode('longBreak');
+        } else {
+          setMode('shortBreak');
+        }
+        start();
+      } else {
+        setMode('work');
+        updateDisplay();
+      }
+    }
+  }
+
+  function skip() {
+    if (intervalId) {
+      clearInterval(intervalId);
+      intervalId = null;
+    }
+
+    if (mode === 'work') {
+      completedSessions++;
+      totalWorkMinutes += parseInt(workDurationInput.value);
+      statSessions.textContent = completedSessions;
+      statTotalTime.textContent = totalWorkMinutes + 'm';
+
+      const interval = parseInt(longBreakIntervalInput.value);
+      setMode(completedSessions % interval === 0 ? 'longBreak' : 'shortBreak');
+    } else {
+      setMode('work');
+    }
+    updateDisplay();
+  }
+
+  function notify() {
+    try {
+      new Notification('番茄钟', {
+        body: mode === 'work' ? '专注时间结束！休息一下吧。' : '休息结束！开始新的专注吧。',
+        icon: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text y=".9em" font-size="90">🍅</text></svg>'
+      });
+    } catch {}
+
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    [800, 600, 900].forEach((freq, i) => {
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+      osc.frequency.value = freq;
+      osc.type = 'sine';
+      gain.gain.value = 0.15;
+      osc.start(audioCtx.currentTime + i * 0.2);
+      osc.stop(audioCtx.currentTime + i * 0.2 + 0.2);
+    });
+  }
+
+  btnToggle.addEventListener('click', toggleTimer);
+  document.getElementById('btnReset').addEventListener('click', reset);
+  document.getElementById('btnSkip').addEventListener('click', skip);
+
+  document.querySelectorAll('.mode-tab').forEach(tab => {
+    tab.addEventListener('click', () => {
+      if (intervalId) {
+        clearInterval(intervalId);
+        intervalId = null;
+      }
+      setMode(tab.dataset.mode);
+    });
+  });
+
+  [workDurationInput, shortBreakDurationInput, longBreakDurationInput].forEach(input => {
+    input.addEventListener('change', () => {
+      let val = parseInt(input.value);
+      const max = parseInt(input.max);
+      const min = parseInt(input.min);
+      if (isNaN(val) || val < min) val = min;
+      if (val > max) val = max;
+      input.value = val;
+      if (!intervalId && (
+        (mode === 'work' && input === workDurationInput) ||
+        (mode === 'shortBreak' && input === shortBreakDurationInput) ||
+        (mode === 'longBreak' && input === longBreakDurationInput)
+      )) {
+        setMode(mode);
+      }
+    });
+  });
+
+  longBreakIntervalInput.addEventListener('change', () => {
+    let val = parseInt(longBreakIntervalInput.value);
+    if (isNaN(val) || val < 1) val = 1;
+    if (val > 10) val = 10;
+    longBreakIntervalInput.value = val;
+  });
+
+  document.addEventListener('keydown', e => {
+    if (e.target.tagName === 'INPUT') return;
+    if (e.code === 'Space') {
+      e.preventDefault();
+      toggleTimer();
+    } else if (e.code === 'KeyR') {
+      reset();
+    } else if (e.code === 'ArrowRight') {
+      skip();
+    }
+  });
+
+  if (Notification.permission === 'default') {
+    Notification.requestPermission();
+  }
+
+  ring.style.strokeDasharray = CIRCUMFERENCE;
+  ring.style.strokeDashoffset = '0';
+  updateDisplay();
+</script>
+</body>
+</html>
